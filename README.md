@@ -2,4 +2,4 @@
 
 See https://github.com/wscherphof/fastify-htmxample.
 
-Also see [./index.js](./index.js)
+Also see [./index.js](./index.js).
