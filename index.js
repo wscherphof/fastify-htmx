@@ -40,7 +40,7 @@ async function plugin(fastify, options = {}) {
     const hxRequest = headers['hx-request']
     const hxHistoryRestoreRequest = headers['hx-history-restore-request']
     if (!isFileName && (!hxRequest || hxHistoryRestoreRequest)) {
-      const indexHtml = path.join(options.dist, 'index.html')
+      const indexHtml = path.join(dist, 'index.html')
       reply.header('Content-Type', 'text/html')
       reply.send(fs.createReadStream(indexHtml, 'utf8'))
     }
