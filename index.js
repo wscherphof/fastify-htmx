@@ -9,9 +9,24 @@ const fs = require('fs')
 
 async function plugin (fastify, options = {}) {
   const defaults = {
-    dist: path.resolve(process.cwd(), 'vite', 'dist')
+    dist: path.resolve(process.cwd(), 'vite', 'dist'),
+    origin: {
+      protocol: 'http',
+      address: 'localhost',
+      port: '3001'
+    }
   }
   options = Object.assign(defaults, options)
+  const { origin } = options
+
+  // allow requests from the app dev server
+  fastify.register(require('fastify-cors'), {
+    origin: `${origin.protocol}://${origin.address}:${origin.port}`,
+    methods: ['GET', 'PUT', 'POST', 'DELETE', 'PATCH', 'HEAD'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'HX-Boosted', 'HX-Current-URL', 'HX-History-Restore-Request', 'HX-Prompt', 'HX-Request', 'HX-Target', 'HX-Trigger', 'HX-Trigger-Name'],
+    exposedHeaders: ['HX-Push', 'HX-Redirect', 'HX-Refresh', 'HX-Retarget', 'HX-Trigger', 'HX-Trigger-After-Swap', 'HX-Trigger-After-Settle'],
+    credentials: true
+  })
 
   // serve the dist as the root
   fastify.register(require('fastify-static'), {

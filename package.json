@@ -9,6 +9,7 @@
   "author": "Wouter Scherphof",
   "license": "GPL-3.0-or-later",
   "dependencies": {
+    "fastify-cors": "^6.0.2",
     "fastify-plugin": "^3.0.0",
     "fastify-static": "^4.5.0"
   },
