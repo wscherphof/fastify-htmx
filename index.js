@@ -9,12 +9,11 @@ const fs = require('fs')
 
 async function plugin (fastify, options = {}) {
   const defaults = {
-    dist: path.resolve(process.cwd(), 'vite', 'dist'),
-    views: './views'
+    dist: path.resolve(process.cwd(), 'vite', 'dist')
   }
   options = Object.assign(defaults, options)
 
-  // serve the vite dist as the root
+  // serve the dist as the root
   fastify.register(require('fastify-static'), {
     root: options.dist
   })
@@ -31,14 +30,6 @@ async function plugin (fastify, options = {}) {
       reply.send(fs.createReadStream(indexHtml, 'utf8'))
     }
     done()
-  })
-
-  fastify.register(require('point-of-view'), {
-    engine: { pug: require('pug') },
-    root: options.views,
-    options: {
-      basedir: path.join(__dirname, '..') // "node_modules"
-    }
   })
 
   fastify.decorateReply('hxRedirect', function hxRedirect (path) {
