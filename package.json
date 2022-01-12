@@ -13,5 +13,8 @@
     "fastify-static": "^4.5.0",
     "point-of-view": "^5.0.0",
     "pug": "^3.0.2"
+  },
+  "devDependencies": {
+    "standard": "^16.0.4"
   }
 }
