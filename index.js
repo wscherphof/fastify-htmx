@@ -7,7 +7,7 @@ const fs = require('fs')
 // the use of fastify-plugin is required to be able
 // to export the decorators to the outer scope
 
-async function plugin (fastify, options = {}) {
+async function plugin(fastify, options = {}) {
   const defaults = {
     dist: path.resolve(process.cwd(), 'vite', 'dist'),
     origin: {
@@ -17,7 +17,7 @@ async function plugin (fastify, options = {}) {
     }
   }
   options = Object.assign(defaults, options)
-  const { origin } = options
+  const { dist, origin } = options
 
   // allow requests from the app dev server
   fastify.register(require('fastify-cors'), {
@@ -30,7 +30,7 @@ async function plugin (fastify, options = {}) {
 
   // serve the dist as the root
   fastify.register(require('fastify-static'), {
-    root: options.dist
+    root: dist
   })
 
   // serve the full page HTML when not Ajax
@@ -47,7 +47,7 @@ async function plugin (fastify, options = {}) {
     done()
   })
 
-  fastify.decorateReply('hxRedirect', function hxRedirect (path) {
+  fastify.decorateReply('hxRedirect', function hxRedirect(path) {
     this.header('HX-Redirect', path)
     return 'redirect'
   })
