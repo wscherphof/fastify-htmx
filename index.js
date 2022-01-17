@@ -6,7 +6,7 @@ const path = require('path')
 // the use of fastify-plugin is required to be able
 // to export the decorators to the outer scope
 
-async function plugin (fastify, options = {}) {
+async function plugin(fastify, options = {}) {
   const defaults = {
     dist: path.resolve('vite', 'dist'),
     origin: 'http://localhost:3001'
@@ -23,6 +23,7 @@ async function plugin (fastify, options = {}) {
   })
 
   // serve the dist as the root
+  // FIXME: option for mount point
   fastify.register(require('fastify-static'), {
     root: options.dist,
     send: {
@@ -30,7 +31,7 @@ async function plugin (fastify, options = {}) {
     }
   })
 
-  fastify.addHook('onRequest', async function fullPageHook (request, reply) {
+  fastify.addHook('onRequest', async function fullPageHook(request, reply) {
     const { url, headers, method } = request
     if (method === 'GET') {
       const isFileName = url.match(/\.\w+$/) // .js, .css, ...
@@ -43,13 +44,13 @@ async function plugin (fastify, options = {}) {
     }
   })
 
-  fastify.get('/push/*', function push (request, reply) {
+  fastify.get('/push/*', function push(request, reply) {
     const star = request.params['*']
     reply.header('HX-Push', '/' + star)
     reply.send()
   })
 
-  fastify.decorateReply('hxRedirect', function hxRedirect (path) {
+  fastify.decorateReply('hxRedirect', function hxRedirect(path) {
     this.header('HX-Redirect', path)
     this.send()
   })
