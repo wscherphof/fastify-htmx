@@ -30,28 +30,23 @@ async function plugin (fastify, options = {}) {
     }
   })
 
-  fastify.addHook('onRequest', function fullPageHook (request, reply, done) {
-    const { url, headers } = request
-    const isFileName = url.match(/\.\w+$/) // .js, .css, ...
-    const hxRequest = headers['hx-request']
-    const hxHistoryRestoreRequest = headers['hx-history-restore-request']
-    if (!isFileName && (!hxRequest || hxHistoryRestoreRequest)) {
-      reply.sendFile('index.html', options.dist)
+  fastify.addHook('onRequest', async function fullPageHook (request, reply) {
+    const { url, headers, method } = request
+    if (method === 'GET') {
+      const isFileName = url.match(/\.\w+$/) // .js, .css, ...
+      const hxRequest = headers['hx-request']
+      const hxHistoryRestoreRequest = headers['hx-history-restore-request']
+      if (!isFileName && (!hxRequest || hxHistoryRestoreRequest)) {
+        await reply.sendFile('index.html', options.dist)
+        return reply
+      }
     }
-    done()
   })
 
-  // this can probably be fastify.get('/push*') or something
-  fastify.addHook('onRequest', function push (request, reply, done) {
-    const PUSH = '/push'
-    const { url } = request
-    if (url === PUSH || url.startsWith(`${PUSH}/`)) {
-      // push to the rest of the url
-      const destination = url.replace(new RegExp(`^\\${PUSH}`), '')
-      reply.header('HX-Push', destination)
-      reply.send()
-    }
-    done()
+  fastify.get('/push/*', function push (request, reply) {
+    const star = request.params['*']
+    reply.header('HX-Push', '/' + star)
+    reply.send()
   })
 
   fastify.decorateReply('hxRedirect', function hxRedirect (path) {
