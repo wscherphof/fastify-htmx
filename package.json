@@ -1,6 +1,6 @@
 {
   "name": "fastify-htmx",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -12,7 +12,8 @@
   "dependencies": {
     "fastify-cors": "^6.0.2",
     "fastify-plugin": "^3.0.0",
-    "fastify-static": "^4.5.0"
+    "fastify-static": "^4.5.0",
+    "node-html-parser": "^5.2.0"
   },
   "devDependencies": {
     "standard": "^16.0.4"
