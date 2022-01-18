@@ -18,24 +18,29 @@ async function plugin(fastify, options = {}) {
   fastify.register(require('fastify-cors'), {
     origin: options.origin,
     methods: ['GET', 'PUT', 'POST', 'DELETE', 'PATCH', 'HEAD'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'HX-Boosted', 'HX-Current-URL', 'HX-History-Restore-Request', 'HX-Prompt', 'HX-Request', 'HX-Target', 'HX-Trigger', 'HX-Trigger-Name'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'HX-Boosted', 'HX-Current-URL', 'HX-History-Restore-Request', 'HX-Prompt', 'HX-Request', 'HX-Target', 'HX-Trigger', 'HX-Trigger-Name', 'HX-Init'],
     exposedHeaders: ['HX-Push', 'HX-Redirect', 'HX-Refresh', 'HX-Retarget', 'HX-Trigger', 'HX-Trigger-After-Swap', 'HX-Trigger-After-Settle'],
     credentials: true
   })
 
   // serve the dist as the root
-  // FIXME: option for mount point
   fastify.register(require('fastify-static'), {
+    // FIXME: option for mount point
+    // BUT: it'd clash w/ the /assets/ links in index.html
     root: options.dist,
     send: {
       index: false
     }
   })
 
+  function hxInit(request) {
+    return request.headers['hx-init']
+  }
+
   function htmx(request) {
     const hxRequest = request.headers['hx-request']
     const hxHistoryRestoreRequest = request.headers['hx-history-restore-request']
-    const htmx = hxRequest && !hxHistoryRestoreRequest
+    const htmx = (hxRequest && !hxHistoryRestoreRequest) && !hxInit(request)
     return htmx
   }
 
@@ -45,12 +50,14 @@ async function plugin(fastify, options = {}) {
     })
   }))
 
-  const INDEX = fs.readFileSync(path.join(options.dist, 'index.html')).toString('utf8')
+  const INDEX = fs.readFileSync(path.join(options.dist, 'index.html'))
+    .toString('utf8')
+    .split('{app}')
 
   fastify.addHook('onSend', async (request, reply, payload) => {
     const { method, url } = request
-    if (method === 'GET' && !htmx(request) && !url.startsWith('/assets/') && !url.startsWith('/favicon')) {
-      payload = INDEX.replace('{app}', payload)
+    if (method === 'GET' && !htmx(request) && !hxInit(request) && !url.startsWith('/assets/') && !url.startsWith('/favicon')) {
+      payload = `${INDEX[0]}${payload}${INDEX[1]}`
     }
     return payload
   })
