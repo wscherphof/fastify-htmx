@@ -44,11 +44,9 @@ async function plugin(fastify, options = {}) {
     return htmx
   }
 
-  fastify.register(fp(async function (fastify) {
-    fastify.decorateRequest('htmx', function () {
-      return htmx(this)
-    })
-  }))
+  fastify.addHook('onRequest', async (request, reply) => {
+    request.htmx = htmx(request)
+  })
 
   const INDEX = fs.readFileSync(path.join(options.dist, 'index.html'))
     .toString('utf8')
