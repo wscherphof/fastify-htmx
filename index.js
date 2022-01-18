@@ -50,7 +50,7 @@ async function plugin(fastify, options = {}) {
 
   const INDEX = fs.readFileSync(path.join(options.dist, 'index.html'))
     .toString('utf8')
-    .split('{app}')
+    .split('<!-- hydrate -->')
 
   fastify.addHook('onSend', async (request, reply, payload) => {
     const { method, url } = request
