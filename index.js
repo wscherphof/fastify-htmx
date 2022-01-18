@@ -2,6 +2,7 @@
 
 const fp = require('fastify-plugin')
 const path = require('path')
+const fs = require('fs')
 
 // the use of fastify-plugin is required to be able
 // to export the decorators to the outer scope
@@ -17,31 +18,48 @@ async function plugin(fastify, options = {}) {
   fastify.register(require('fastify-cors'), {
     origin: options.origin,
     methods: ['GET', 'PUT', 'POST', 'DELETE', 'PATCH', 'HEAD'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'HX-Boosted', 'HX-Current-URL', 'HX-History-Restore-Request', 'HX-Prompt', 'HX-Request', 'HX-Target', 'HX-Trigger', 'HX-Trigger-Name'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'HX-Boosted', 'HX-Current-URL', 'HX-History-Restore-Request', 'HX-Prompt', 'HX-Request', 'HX-Target', 'HX-Trigger', 'HX-Trigger-Name', 'HX-Init'],
     exposedHeaders: ['HX-Push', 'HX-Redirect', 'HX-Refresh', 'HX-Retarget', 'HX-Trigger', 'HX-Trigger-After-Swap', 'HX-Trigger-After-Settle'],
     credentials: true
   })
 
   // serve the dist as the root
-  // FIXME: option for mount point
   fastify.register(require('fastify-static'), {
+    // FIXME: option for mount point
+    // BUT: it'd clash w/ the /assets/ links in index.html
     root: options.dist,
     send: {
       index: false
     }
   })
 
-  fastify.addHook('onRequest', async function fullPageHook(request, reply) {
-    const { url, headers, method } = request
-    if (method === 'GET') {
-      const isFileName = url.match(/\.\w+$/) // .js, .css, ...
-      const hxRequest = headers['hx-request']
-      const hxHistoryRestoreRequest = headers['hx-history-restore-request']
-      if (!isFileName && (!hxRequest || hxHistoryRestoreRequest)) {
-        await reply.sendFile('index.html', options.dist)
-        return reply
-      }
+  function hxInit(request) {
+    return request.headers['hx-init']
+  }
+
+  function htmx(request) {
+    const hxRequest = request.headers['hx-request']
+    const hxHistoryRestoreRequest = request.headers['hx-history-restore-request']
+    const htmx = (hxRequest && !hxHistoryRestoreRequest) && !hxInit(request)
+    return htmx
+  }
+
+  fastify.register(fp(async function (fastify) {
+    fastify.decorateRequest('htmx', function () {
+      return htmx(this)
+    })
+  }))
+
+  const INDEX = fs.readFileSync(path.join(options.dist, 'index.html'))
+    .toString('utf8')
+    .split('{app}')
+
+  fastify.addHook('onSend', async (request, reply, payload) => {
+    const { method, url } = request
+    if (method === 'GET' && !htmx(request) && !hxInit(request) && !url.startsWith('/assets/') && !url.startsWith('/favicon')) {
+      payload = `${INDEX[0]}${payload}${INDEX[1]}`
     }
+    return payload
   })
 
   fastify.get('/push/*', function push(request, reply) {
