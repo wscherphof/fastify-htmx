@@ -2,6 +2,7 @@
 
 const fp = require('fastify-plugin')
 const path = require('path')
+const fs = require('fs')
 
 // the use of fastify-plugin is required to be able
 // to export the decorators to the outer scope
@@ -31,17 +32,27 @@ async function plugin(fastify, options = {}) {
     }
   })
 
-  fastify.addHook('onRequest', async function fullPageHook(request, reply) {
-    const { url, headers, method } = request
-    if (method === 'GET') {
-      const isFileName = url.match(/\.\w+$/) // .js, .css, ...
-      const hxRequest = headers['hx-request']
-      const hxHistoryRestoreRequest = headers['hx-history-restore-request']
-      if (!isFileName && (!hxRequest || hxHistoryRestoreRequest)) {
-        await reply.sendFile('index.html', options.dist)
-        return reply
-      }
+  function htmx(request) {
+    const hxRequest = request.headers['hx-request']
+    const hxHistoryRestoreRequest = request.headers['hx-history-restore-request']
+    const htmx = hxRequest && !hxHistoryRestoreRequest
+    return htmx
+  }
+
+  fastify.register(fp(async function (fastify) {
+    fastify.decorateRequest('htmx', function () {
+      return htmx(this)
+    })
+  }))
+
+  const INDEX = fs.readFileSync(path.join(options.dist, 'index.html')).toString('utf8')
+
+  fastify.addHook('onSend', async (request, reply, payload) => {
+    const { method, url } = request
+    if (method === 'GET' && !htmx(request) && !url.startsWith('/assets/') && !url.startsWith('/favicon')) {
+      payload = INDEX.replace('{app}', payload)
     }
+    return payload
   })
 
   fastify.get('/push/*', function push(request, reply) {
