@@ -45,6 +45,8 @@ async function plugin (fastify, options = {}) {
     return htmx
   }
 
+  fastify.decorateRequest('htmx', false)
+
   fastify.addHook('onRequest', async (request, reply) => {
     request.htmx = htmx(request)
   })
