@@ -66,6 +66,7 @@ async function plugin(fastify, options = {}) {
   fastify.addHook('onSend', async (request, reply, payload) => {
     const { method, url } = request
     if (method === 'GET' && !htmx(request) && !hxInit(request) && !url.startsWith('/assets/') && !url.startsWith('/favicon')) {
+      reply.header('Content-Type', 'text/html')
       payload = `${INDEX[0]}${payload}${INDEX[1]}`
     }
     return payload
