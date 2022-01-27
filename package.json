@@ -1,6 +1,6 @@
 {
   "name": "fastify-htmx",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -10,6 +10,10 @@
     "lint": "npm run eslint -- --fix && npm run prettier -- --write",
     "pretest": "npm run eslint && npm run prettier -- --check",
     "test": "exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wscherphof/fastify-htmx.git"
   },
   "author": "Wouter Scherphof",
   "license": "GPL-3.0-or-later",
